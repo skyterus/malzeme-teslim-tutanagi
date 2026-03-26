@@ -485,6 +485,12 @@ h3 {
 
 /* Yazdırma Stilleri */
 @media print {
+    @page {
+        margin: 15mm;
+    }
+    body {
+        background: #fff !important;
+    }
     body * {
         visibility: hidden;
     }
@@ -496,9 +502,13 @@ h3 {
         left: 0;
         top: 0;
         width: 100%;
-        padding: 20px;
+        padding: 0;
     }
     .modal-header {
         display: none !important;
+    }
+    .tutanak-tablo th {
+        background: #fff !important;
+        -webkit-print-color-adjust: exact;
     }
 }

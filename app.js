@@ -104,6 +104,19 @@ function malzemeleriAl() {
     return malzemeler;
 }
 
+// Türkçe tarih ve saat notu oluştur
+function turkceTarihSaatNot() {
+    const simdi = new Date();
+    const gun = String(simdi.getDate()).padStart(2, '0');
+    const aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+                   'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+    const ay = aylar[simdi.getMonth()];
+    const yil = simdi.getFullYear();
+    const saat = String(simdi.getHours()).padStart(2, '0');
+    const dakika = String(simdi.getMinutes()).padStart(2, '0');
+    return `${gun} ${ay} ${yil} ${saat}:${dakika}'da yukarıdaki malzemeler teslim edilmiştir.`;
+}
+
 // Tutanak kaydet
 function tutanakKaydet(e) {
     e.preventDefault();
@@ -117,7 +130,7 @@ function tutanakKaydet(e) {
         teslimAlanBirim: document.getElementById('teslimAlanBirim').value.trim(),
         teslimAlanKisi: document.getElementById('teslimAlanKisi').value.trim(),
         malzemeler: malzemeleriAl(),
-        genelAciklama: document.getElementById('genelAciklama').value.trim(),
+        genelAciklama: turkceTarihSaatNot(),
         olusturmaTarihi: new Date().toISOString()
     };
 
@@ -272,7 +285,42 @@ function modalKapat() {
 }
 
 function sayfaYazdir() {
-    window.print();
+    const icerik = document.getElementById('yazdir-icerik').innerHTML;
+    const pencere = window.open('', '_blank');
+    pencere.document.write(`
+        <!DOCTYPE html>
+        <html lang="tr">
+        <head>
+            <meta charset="UTF-8">
+            <title>Malzeme Teslim Tutanağı</title>
+            <style>
+                @page { margin: 0; size: portrait; }
+                body { font-family: 'Segoe UI', Tahoma, sans-serif; color: #333; padding: 15mm; }
+                .tutanak-baslik { text-align: center; margin-bottom: 24px; }
+                .tutanak-baslik h2 { font-size: 1.3rem; margin-bottom: 4px; }
+                .tutanak-baslik p { color: #666; font-size: 0.9rem; }
+                .tutanak-bilgi { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin-bottom: 20px; font-size: 0.9rem; }
+                .tutanak-bilgi div { padding: 4px 0; }
+                .tutanak-bilgi strong { color: #555; }
+                .tutanak-tablo { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+                .tutanak-tablo th, .tutanak-tablo td { border: 1px solid #999; padding: 8px 10px; text-align: left; font-size: 0.9rem; }
+                .tutanak-tablo th { font-weight: 600; background: #e8e8e8; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .tutanak-tablo td { background: #f5f5f5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .tutanak-not { margin-bottom: 30px; font-size: 0.9rem; color: #555; }
+                .imza-alani { display: flex; justify-content: space-between; margin-top: 50px; }
+                .imza-kutusu { text-align: center; width: 200px; }
+                .imza-kutusu .cizgi { border-top: 1px solid #333; margin-bottom: 4px; margin-top: 60px; }
+                .imza-kutusu p { font-size: 0.85rem; color: #555; }
+            </style>
+        </head>
+        <body>${icerik}</body>
+        </html>
+    `);
+    pencere.document.close();
+    pencere.onload = () => {
+        pencere.print();
+        pencere.close();
+    };
 }
 
 // Modal dışına tıklayınca kapat

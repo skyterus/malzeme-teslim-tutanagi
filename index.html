@@ -34,7 +34,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Teslim Eden Birim</label>
-                        <input type="text" id="teslimEdenBirim" placeholder="Örn: Bilgi İşlem" required>
+                        <input type="text" id="teslimEdenBirim" value="İTF Bilgi İşlem Teknik Servis" readonly required>
                     </div>
                     <div class="form-group">
                         <label>Teslim Eden Kişi</label>
@@ -88,9 +88,8 @@
                 </table>
                 <button type="button" class="btn-ekle" onclick="satirEkle()">+ Malzeme Ekle</button>
 
-                <div class="form-group">
-                    <label>Genel Açıklama / Not</label>
-                    <textarea id="genelAciklama" rows="3" placeholder="Opsiyonel"></textarea>
+                <div class="form-group" style="display:none;">
+                    <textarea id="genelAciklama"></textarea>
                 </div>
 
                 <div class="form-actions">
