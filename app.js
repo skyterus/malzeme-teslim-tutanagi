@@ -286,8 +286,23 @@ function modalKapat() {
 
 function sayfaYazdir() {
     const icerik = document.getElementById('yazdir-icerik').innerHTML;
-    const pencere = window.open('', '_blank');
-    pencere.document.write(`
+
+    // Mevcut iframe varsa kaldır
+    let iframe = document.getElementById('yazdir-iframe');
+    if (iframe) iframe.remove();
+
+    iframe = document.createElement('iframe');
+    iframe.id = 'yazdir-iframe';
+    iframe.style.position = 'fixed';
+    iframe.style.top = '-10000px';
+    iframe.style.left = '-10000px';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(`
         <!DOCTYPE html>
         <html lang="tr">
         <head>
@@ -295,7 +310,7 @@ function sayfaYazdir() {
             <title>Malzeme Teslim Tutanağı</title>
             <style>
                 @page { margin: 0; size: portrait; }
-                body { font-family: 'Segoe UI', Tahoma, sans-serif; color: #333; padding: 15mm; }
+                body { font-family: 'Segoe UI', Tahoma, sans-serif; color: #333; padding: 15mm; margin: 0; }
                 .tutanak-baslik { text-align: center; margin-bottom: 24px; }
                 .tutanak-baslik h2 { font-size: 1.3rem; margin-bottom: 4px; }
                 .tutanak-baslik p { color: #666; font-size: 0.9rem; }
@@ -316,10 +331,10 @@ function sayfaYazdir() {
         <body>${icerik}</body>
         </html>
     `);
-    pencere.document.close();
-    pencere.onload = () => {
-        pencere.print();
-        pencere.close();
+    doc.close();
+
+    iframe.onload = () => {
+        iframe.contentWindow.print();
     };
 }
 
