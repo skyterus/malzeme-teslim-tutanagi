@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malzeme Teslim Tutanağı</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Malzeme Teslim Tutanağı</h1>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="yeni">Yeni Tutanak</button>
+            <button class="tab" data-tab="gecmis">Geçmiş Tutanaklar</button>
+        </div>
+
+        <!-- Yeni Tutanak Formu -->
+        <div id="yeni" class="tab-content active">
+            <form id="tutanakForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tutanak No</label>
+                        <input type="text" id="tutanakNo" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Tarih</label>
+                        <input type="date" id="tarih" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Teslim Eden Birim</label>
+                        <input type="text" id="teslimEdenBirim" placeholder="Örn: Bilgi İşlem" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Teslim Eden Kişi</label>
+                        <input type="text" id="teslimEdenKisi" placeholder="Ad Soyad" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Teslim Alan Birim</label>
+                        <input type="text" id="teslimAlanBirim" placeholder="Örn: Muhasebe" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Teslim Alan Kişi</label>
+                        <input type="text" id="teslimAlanKisi" placeholder="Ad Soyad" required>
+                    </div>
+                </div>
+
+                <h3>Malzeme Listesi</h3>
+                <table id="malzemeTablosu">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Malzeme Adı</th>
+                            <th>Miktar</th>
+                            <th>Birim</th>
+                            <th>Açıklama</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="malzemeListesi">
+                        <tr>
+                            <td class="sira">1</td>
+                            <td><input type="text" name="malzemeAdi" placeholder="Malzeme adı" required></td>
+                            <td><input type="number" name="miktar" min="1" value="1" required></td>
+                            <td>
+                                <select name="birim">
+                                    <option value="Adet">Adet</option>
+                                    <option value="Kutu">Kutu</option>
+                                    <option value="Paket">Paket</option>
+                                    <option value="Koli">Koli</option>
+                                    <option value="Metre">Metre</option>
+                                    <option value="Kg">Kg</option>
+                                    <option value="Litre">Litre</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="aciklama" placeholder="Opsiyonel"></td>
+                            <td><button type="button" class="btn-sil" onclick="satirSil(this)" title="Satır Sil">&times;</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="btn-ekle" onclick="satirEkle()">+ Malzeme Ekle</button>
+
+                <div class="form-group">
+                    <label>Genel Açıklama / Not</label>
+                    <textarea id="genelAciklama" rows="3" placeholder="Opsiyonel"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-kaydet">Kaydet</button>
+                    <button type="button" class="btn-temizle" onclick="formuTemizle()">Temizle</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Geçmiş Tutanaklar -->
+        <div id="gecmis" class="tab-content">
+            <div class="arama-kutusu">
+                <input type="text" id="aramaInput" placeholder="Tutanak no, birim veya kişi ara...">
+            </div>
+            <div id="gecmisTutanaklar"></div>
+        </div>
+    </div>
+
+    <!-- Yazdırma Önizleme Modal -->
+    <div id="yazdir-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="btn-yazdir-gercek" onclick="sayfaYazdir()">Yazdır</button>
+                <button class="btn-kapat" onclick="modalKapat()">&times;</button>
+            </div>
+            <div id="yazdir-icerik"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
