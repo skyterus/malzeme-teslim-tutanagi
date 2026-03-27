@@ -1,11 +1,37 @@
-// LocalStorage key
-const STORAGE_KEY = 'malzemeTeslimTutanaklari';
+// ==================== API FONKSİYONLARI ====================
+async function apiGetir() {
+    const res = await fetch('/api/tutanaklar');
+    return await res.json();
+}
 
-// Sayfa yüklendiğinde
-document.addEventListener('DOMContentLoaded', () => {
+async function apiKaydet(tutanak) {
+    const res = await fetch('/api/tutanaklar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tutanak)
+    });
+    return await res.json();
+}
+
+async function apiGuncelle(id, tutanak) {
+    const res = await fetch('/api/tutanaklar/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tutanak)
+    });
+    return await res.json();
+}
+
+async function apiSil(id) {
+    const res = await fetch('/api/tutanaklar/' + id, { method: 'DELETE' });
+    return await res.json();
+}
+
+// ==================== SAYFA YÜKLEME ====================
+document.addEventListener('DOMContentLoaded', async () => {
     tarihAyarla();
-    tutanakNoOlustur();
-    gecmisTutanaklariYukle();
+    await tutanakNoOlustur();
+    await gecmisTutanaklariYukle();
 
     // Tab geçişleri
     document.querySelectorAll('.tab').forEach(tab => {
@@ -22,6 +48,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Arama
     document.getElementById('aramaInput').addEventListener('input', gecmisTutanaklariYukle);
+
+    // Teslim Eden Birim: çift tıkla düzenle, dışına tıkla kilitle
+    const birimInput = document.getElementById('teslimEdenBirim');
+    birimInput.addEventListener('dblclick', () => {
+        birimInput.readOnly = false;
+        birimInput.style.cursor = 'text';
+        birimInput.style.backgroundColor = '#fff8e1';
+        birimInput.focus();
+        birimInput.select();
+    });
+    birimInput.addEventListener('blur', () => {
+        birimInput.readOnly = true;
+        birimInput.style.cursor = 'default';
+        birimInput.style.backgroundColor = '';
+    });
+    birimInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { birimInput.blur(); }
+    });
 });
 
 function tarihAyarla() {
@@ -29,23 +73,14 @@ function tarihAyarla() {
     document.getElementById('tarih').value = bugun;
 }
 
-function tutanakNoOlustur() {
-    const tutanaklar = veriGetir();
+async function tutanakNoOlustur() {
+    const tutanaklar = await apiGetir();
     const yil = new Date().getFullYear();
     const sira = tutanaklar.length + 1;
     document.getElementById('tutanakNo').value = `MTT-${yil}-${String(sira).padStart(4, '0')}`;
 }
 
-function veriGetir() {
-    const veri = localStorage.getItem(STORAGE_KEY);
-    return veri ? JSON.parse(veri) : [];
-}
-
-function veriKaydet(tutanaklar) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tutanaklar));
-}
-
-// Malzeme satırı ekle
+// ==================== MALZEME İŞLEMLERİ ====================
 function satirEkle() {
     const tbody = document.getElementById('malzemeListesi');
     const satirSayisi = tbody.rows.length + 1;
@@ -71,7 +106,6 @@ function satirEkle() {
     tbody.appendChild(yeniSatir);
 }
 
-// Malzeme satırı sil
 function satirSil(btn) {
     const tbody = document.getElementById('malzemeListesi');
     if (tbody.rows.length <= 1) {
@@ -89,7 +123,6 @@ function siralariGuncelle() {
     });
 }
 
-// Malzeme listesini formdan al
 function malzemeleriAl() {
     const satirlar = document.querySelectorAll('#malzemeListesi tr');
     const malzemeler = [];
@@ -104,7 +137,6 @@ function malzemeleriAl() {
     return malzemeler;
 }
 
-// Türkçe tarih ve saat notu oluştur
 function turkceTarihSaatNot() {
     const simdi = new Date();
     const gun = String(simdi.getDate()).padStart(2, '0');
@@ -117,12 +149,15 @@ function turkceTarihSaatNot() {
     return `${gun} ${ay} ${yil} ${saat}:${dakika}'da yukarıdaki malzemeler teslim edilmiştir.`;
 }
 
-// Tutanak kaydet
-function tutanakKaydet(e) {
+// ==================== KAYDET / GÜNCELLE ====================
+async function tutanakKaydet(e) {
     e.preventDefault();
 
+    const form = document.getElementById('tutanakForm');
+    const duzenlemeModu = form.dataset.duzenlemeModu === 'true';
+    const duzenleId = parseInt(form.dataset.duzenleId);
+
     const tutanak = {
-        id: Date.now(),
         tutanakNo: document.getElementById('tutanakNo').value,
         tarih: document.getElementById('tarih').value,
         teslimEdenBirim: document.getElementById('teslimEdenBirim').value.trim(),
@@ -134,23 +169,37 @@ function tutanakKaydet(e) {
         olusturmaTarihi: new Date().toISOString()
     };
 
-    const tutanaklar = veriGetir();
-    tutanaklar.unshift(tutanak);
-    veriKaydet(tutanaklar);
+    try {
+        if (duzenlemeModu) {
+            await apiGuncelle(duzenleId, tutanak);
+            alert('Tutanak başarıyla güncellendi!');
+        } else {
+            await apiKaydet(tutanak);
+            alert('Tutanak başarıyla kaydedildi!');
+        }
+    } catch (err) {
+        alert('Hata oluştu: ' + err.message);
+        return;
+    }
 
-    alert('Tutanak başarıyla kaydedildi!');
-    formuTemizle();
-    gecmisTutanaklariYukle();
+    // Düzenleme modunu sıfırla
+    form.dataset.duzenlemeModu = 'false';
+    form.dataset.duzenleId = '';
+    const submitBtn = document.querySelector('#tutanakForm button[type="submit"]');
+    submitBtn.textContent = 'Kaydet';
+    submitBtn.style.backgroundColor = '';
+
+    await formuTemizle();
+    await gecmisTutanaklariYukle();
 }
 
-// Formu temizle
-function formuTemizle() {
+// ==================== FORM TEMİZLE ====================
+async function formuTemizle() {
     document.getElementById('tutanakForm').reset();
     const tbody = document.getElementById('malzemeListesi');
     while (tbody.rows.length > 1) {
         tbody.deleteRow(1);
     }
-    // İlk satırı temizle
     const ilkSatir = tbody.rows[0];
     ilkSatir.querySelector('[name="malzemeAdi"]').value = '';
     ilkSatir.querySelector('[name="miktar"]').value = '1';
@@ -158,15 +207,14 @@ function formuTemizle() {
     ilkSatir.querySelector('[name="aciklama"]').value = '';
 
     tarihAyarla();
-    tutanakNoOlustur();
+    await tutanakNoOlustur();
 }
 
-// Geçmiş tutanakları yükle
-function gecmisTutanaklariYukle() {
+// ==================== GEÇMİŞ TUTANAKLAR ====================
+async function gecmisTutanaklariYukle() {
     const container = document.getElementById('gecmisTutanaklar');
-    let tutanaklar = veriGetir();
+    let tutanaklar = await apiGetir();
 
-    // Arama filtresi
     const arama = document.getElementById('aramaInput').value.toLowerCase().trim();
     if (arama) {
         tutanaklar = tutanaklar.filter(t =>
@@ -198,7 +246,8 @@ function gecmisTutanaklariYukle() {
             </div>
             <div class="tutanak-kart-actions">
                 <button class="btn-goruntule" onclick="tutanakGoruntule(${t.id})">Görüntüle</button>
-                <button class="btn-yazdir-kucuk" onclick="tutanakGoruntule(${t.id})">Yazdır</button>
+                <button class="btn-duzenle" onclick="tutanakDuzenle(${t.id})">&#9998; Düzenle</button>
+                <button class="btn-yazdir-kucuk" onclick="tutanakDogruYazdir(${t.id})">Yazdır</button>
                 <button class="btn-sil-kucuk" onclick="tutanakSil(${t.id})">Sil</button>
             </div>
         </div>
@@ -210,9 +259,9 @@ function tarihFormatla(tarihStr) {
     return `${gun}.${ay}.${yil}`;
 }
 
-// Tutanak görüntüle / yazdır
-function tutanakGoruntule(id) {
-    const tutanaklar = veriGetir();
+// ==================== GÖRÜNTÜLE ====================
+async function tutanakGoruntule(id) {
+    const tutanaklar = await apiGetir();
     const t = tutanaklar.find(x => x.id === id);
     if (!t) return;
 
@@ -252,13 +301,13 @@ function tutanakGoruntule(id) {
         ${t.genelAciklama ? `<div class="tutanak-not"><strong>Not:</strong> ${t.genelAciklama}</div>` : ''}
         <div class="imza-alani">
             <div class="imza-kutusu">
-                <div class="cizgi"></div>
                 <p><strong>Teslim Eden</strong></p>
+                <div class="cizgi"></div>
                 <p>${t.teslimEdenKisi}</p>
             </div>
             <div class="imza-kutusu">
-                <div class="cizgi"></div>
                 <p><strong>Teslim Alan</strong></p>
+                <div class="cizgi"></div>
                 <p>${t.teslimAlanKisi}</p>
             </div>
         </div>
@@ -268,18 +317,75 @@ function tutanakGoruntule(id) {
     document.getElementById('yazdir-modal').classList.add('aktif');
 }
 
-// Tutanak sil
-function tutanakSil(id) {
-    if (!confirm('Bu tutanağı silmek istediğinize emin misiniz?')) return;
+// ==================== DÜZENLE ====================
+async function tutanakDuzenle(id) {
+    const tutanaklar = await apiGetir();
+    const t = tutanaklar.find(t => t.id === id);
+    if (!t) return;
 
-    let tutanaklar = veriGetir();
-    tutanaklar = tutanaklar.filter(t => t.id !== id);
-    veriKaydet(tutanaklar);
-    gecmisTutanaklariYukle();
-    tutanakNoOlustur();
+    // Yeni Tutanak sekmesine geç
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector('[data-tab="yeni"]').classList.add('active');
+    document.getElementById('yeni').classList.add('active');
+
+    // Form alanlarını doldur
+    document.getElementById('tutanakNo').value = t.tutanakNo;
+    document.getElementById('tarih').value = t.tarih;
+    document.getElementById('teslimEdenBirim').value = t.teslimEdenBirim;
+    document.getElementById('teslimEdenKisi').value = t.teslimEdenKisi;
+    document.getElementById('teslimAlanBirim').value = t.teslimAlanBirim;
+    document.getElementById('teslimAlanKisi').value = t.teslimAlanKisi;
+
+    // Malzeme satırlarını doldur
+    const tbody = document.getElementById('malzemeListesi');
+    tbody.innerHTML = '';
+    t.malzemeler.forEach((m, i) => {
+        const yeniSatir = document.createElement('tr');
+        yeniSatir.innerHTML = `
+            <td class="sira">${i + 1}</td>
+            <td><input type="text" name="malzemeAdi" value="${m.malzemeAdi}" required></td>
+            <td><input type="number" name="miktar" min="1" value="${m.miktar}" required></td>
+            <td>
+                <select name="birim">
+                    <option value="Adet" ${m.birim === 'Adet' ? 'selected' : ''}>Adet</option>
+                    <option value="Kutu" ${m.birim === 'Kutu' ? 'selected' : ''}>Kutu</option>
+                    <option value="Paket" ${m.birim === 'Paket' ? 'selected' : ''}>Paket</option>
+                    <option value="Koli" ${m.birim === 'Koli' ? 'selected' : ''}>Koli</option>
+                    <option value="Metre" ${m.birim === 'Metre' ? 'selected' : ''}>Metre</option>
+                    <option value="Kg" ${m.birim === 'Kg' ? 'selected' : ''}>Kg</option>
+                    <option value="Litre" ${m.birim === 'Litre' ? 'selected' : ''}>Litre</option>
+                </select>
+            </td>
+            <td><input type="text" name="aciklama" value="${m.aciklama || ''}"></td>
+            <td><button type="button" class="btn-sil" onclick="satirSil(this)" title="Satır Sil">&times;</button></td>
+        `;
+        tbody.appendChild(yeniSatir);
+    });
+
+    document.getElementById('tutanakForm').dataset.duzenleId = id;
+    document.getElementById('tutanakForm').dataset.duzenlemeModu = 'true';
+
+    const submitBtn = document.querySelector('#tutanakForm button[type="submit"]');
+    submitBtn.textContent = 'Güncelle';
+    submitBtn.style.backgroundColor = '#e67e22';
 }
 
-// Modal işlemleri
+// ==================== DOĞRUDAN YAZDIR ====================
+function tutanakDogruYazdir(id) {
+    tutanakGoruntule(id);
+    setTimeout(() => { sayfaYazdir(); }, 300);
+}
+
+// ==================== SİL ====================
+async function tutanakSil(id) {
+    if (!confirm('Bu tutanağı silmek istediğinize emin misiniz?')) return;
+    await apiSil(id);
+    await gecmisTutanaklariYukle();
+    await tutanakNoOlustur();
+}
+
+// ==================== MODAL & YAZDIR ====================
 function modalKapat() {
     document.getElementById('yazdir-modal').classList.remove('aktif');
 }
@@ -287,7 +393,6 @@ function modalKapat() {
 function sayfaYazdir() {
     const icerik = document.getElementById('yazdir-icerik').innerHTML;
 
-    // Mevcut iframe varsa kaldır
     let iframe = document.getElementById('yazdir-iframe');
     if (iframe) iframe.remove();
 
@@ -324,7 +429,7 @@ function sayfaYazdir() {
                 .tutanak-not { margin-bottom: 30px; font-size: 0.9rem; color: #555; }
                 .imza-alani { display: flex; justify-content: space-between; margin-top: 50px; }
                 .imza-kutusu { text-align: center; width: 200px; }
-                .imza-kutusu .cizgi { border-top: 1px solid #333; margin-bottom: 4px; margin-top: 60px; }
+                .imza-kutusu .cizgi { border-top: 1px solid #333; margin-top: 8px; margin-bottom: 4px; }
                 .imza-kutusu p { font-size: 0.85rem; color: #555; }
             </style>
         </head>

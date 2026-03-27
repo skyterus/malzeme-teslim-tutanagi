@@ -1,0 +1,12 @@
+{
+  "name": "malzeme-teslim-tutanagi",
+  "version": "1.0.0",
+  "description": "Bilgi İşlem Süreç Yönetimi Malzeme Teslim Tutanakları",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

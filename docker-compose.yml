@@ -2,10 +2,13 @@ services:
   malzeme-teslim:
     build:
       context: /share/Container/malzeme-teslim-tutanagi
+      dockerfile: /share/Container/malzeme-teslim-tutanagi/Dockerfile
     container_name: malzeme-teslim-tutanagi
     restart: unless-stopped
     ports:
-      - "8002:80"
+      - "8002:3000"
+    volumes:
+      - /share/Container/malzeme-teslim-tutanagi/data:/app/data
     environment:
       - TZ=Europe/Istanbul
     labels:

@@ -299,7 +299,7 @@ h3 {
     justify-content: flex-end;
 }
 
-.btn-goruntule, .btn-yazdir-kucuk, .btn-sil-kucuk {
+.btn-goruntule, .btn-duzenle, .btn-yazdir-kucuk, .btn-sil-kucuk {
     padding: 6px 14px;
     border: none;
     border-radius: 6px;
@@ -315,6 +315,15 @@ h3 {
 
 .btn-goruntule:hover {
     background: #d2e3fc;
+}
+
+.btn-duzenle {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.btn-duzenle:hover {
+    background: #ffe0b2;
 }
 
 .btn-yazdir-kucuk {
@@ -474,8 +483,8 @@ h3 {
 
 .imza-kutusu .cizgi {
     border-top: 1px solid #333;
+    margin-top: 8px;
     margin-bottom: 4px;
-    margin-top: 60px;
 }
 
 .imza-kutusu p {
